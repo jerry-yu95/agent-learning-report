@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0052D9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AI Agent 系统学习报告</title>
+<style>
+:root {
+  /* 腾讯蓝 × Anthropic 橙 — 双品牌融合 */
+  --color-blue: #0052D9;
+  --color-blue-dark: #003EB3;
+  --color-blue-mid: #1A6FE8;
+  --color-blue-soft: rgba(0, 82, 217, 0.09);
+  --color-blue-glow: rgba(0, 82, 217, 0.18);
+  --color-orange: #C96442;
+  --color-orange-dark: #A8522F;
+  --color-orange-soft: rgba(201, 100, 66, 0.10);
+  --color-orange-glow: rgba(201, 100, 66, 0.16);
+  --gradient-brand: linear-gradient(135deg, var(--color-blue) 0%, var(--color-blue-mid) 52%, var(--color-orange) 100%);
+  --gradient-brand-h: linear-gradient(90deg, var(--color-blue), var(--color-orange));
+  --gradient-brand-soft: linear-gradient(135deg, var(--color-blue-soft) 0%, var(--color-orange-soft) 100%);
+  --color-accent: var(--color-blue);
+  --color-accent-dark: var(--color-blue-dark);
+  --color-accent-soft: var(--color-blue-soft);
+  --color-accent-glow: var(--color-blue-glow);
+  --color-warm: var(--color-orange);
+  --color-bg: #f5f7fb;
+  --color-bg-mesh:
+    radial-gradient(ellipse 90% 60% at 5% -5%, rgba(0, 82, 217, 0.09), transparent 58%),
+    radial-gradient(ellipse 70% 50% at 95% 8%, rgba(201, 100, 66, 0.07), transparent 52%),
+    radial-gradient(ellipse 55% 35% at 50% 105%, rgba(0, 82, 217, 0.04), transparent 60%);
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-text: #1a1d26;
+  --color-text-dim: #6b7280;
+  --color-line: rgba(26, 29, 38, 0.07);
+  --color-code-bg: #f0f2f7;
+  --font-body: "TencentSans", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-display: "Outfit", var(--font-body);
+  --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", monospace;
+  --sidebar-w: 288px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-sm: 0 1px 2px rgba(0, 30, 80, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 30, 80, 0.05), 0 10px 36px -10px rgba(0, 50, 120, 0.10);
+  --shadow-float: 0 8px 28px -4px rgba(0, 82, 217, 0.18), 0 4px 12px rgba(201, 100, 66, 0.08);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --mobile-header-h: 56px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overflow-x:hidden;max-width:100vw}
+body{font-family:var(--font-body);background:var(--color-bg);background-image:var(--color-bg-mesh);background-attachment:fixed;color:var(--color-text);line-height:1.75;min-height:100dvh;overflow-x:hidden;max-width:100vw;width:100%}
+a{color:var(--color-blue-dark);text-decoration:none;transition:color .2s var(--ease)}
+a:active{color:var(--color-orange-dark)}
+
+/* Progress bar */
+.read-progress{position:fixed;top:0;left:0;right:0;height:3px;background:var(--color-blue-soft);z-index:300;pointer-events:none}
+.read-progress-bar{height:100%;width:0;background:var(--gradient-brand-h);border-radius:0 2px 2px 0;transition:width .1s linear;box-shadow:0 0 8px var(--color-blue-glow)}
+
+/* Mobile top bar */
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:calc(var(--mobile-header-h) + var(--safe-top));padding-top:var(--safe-top);background:rgba(255,255,255,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--color-line);z-index:150;align-items:center;padding-left:.75rem;padding-right:.75rem;gap:.5rem}
+.mobile-header-title{flex:1;font-family:var(--font-display);font-size:.9375rem;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 .25rem;min-width:0}
+.mobile-header-chapter{font-size:.6875rem;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42%;flex-shrink:0}
+
+/* Layout */
+.layout{display:block;min-height:100dvh;width:100%;max-width:100vw}
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100dvh;max-height:100dvh;overflow-y:auto;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-right:1px solid var(--color-line);padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:1rem;z-index:100;-webkit-overflow-scrolling:touch}
+.sidebar-header{padding-bottom:1rem;border-bottom:1px solid var(--color-line)}
+.sidebar-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6875rem;font-weight:600;color:var(--color-blue-dark);background:var(--gradient-brand-soft);padding:.2rem .55rem;border-radius:999px;margin-bottom:.5rem;letter-spacing:.03em;border:1px solid rgba(0,82,217,0.12)}
+.sidebar-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gradient-brand-h);animation:pulse-dot 2s ease infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.sidebar-title{font-family:var(--font-display);font-size:1.1875rem;font-weight:800;letter-spacing:-0.03em;line-height:1.25}
+.sidebar-sub{font-size:.75rem;color:var(--color-text-dim);margin-top:.35rem;line-height:1.5}
+.search-wrap{position:relative}
+.search-wrap::before{content:'⌕';position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--color-text-dim);font-size:1rem;pointer-events:none;line-height:1}
+.search-box{width:100%;padding:.625rem .75rem .625rem 2.25rem;border:1.5px solid var(--color-line);border-radius:var(--radius-sm);font-size:.9375rem;background:var(--color-bg);font-family:inherit;transition:border-color .2s var(--ease),box-shadow .2s var(--ease);min-height:44px}
+.search-box:focus{outline:none;border-color:var(--color-blue);box-shadow:0 0 0 3px var(--color-blue-soft)}
+.nav-list{list-style:none;display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nav-list a{display:flex;align-items:center;gap:.5rem;padding:.625rem .75rem;border-radius:var(--radius-sm);font-size:.8125rem;color:var(--color-text-dim);transition:all .2s var(--ease);min-height:44px;line-height:1.35}
+.nav-list a::before{content:'';width:3px;height:0;border-radius:2px;background:var(--gradient-brand-h);transition:height .2s var(--ease);flex-shrink:0}
+.nav-list a:hover,.nav-list a.active{background:var(--gradient-brand-soft);color:var(--color-blue-dark);font-weight:600}
+.nav-list a.active::before{height:1.1em}
+.nav-list .nav-part{font-weight:700;color:var(--color-text-dim);margin-top:.875rem;font-size:.6875rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .75rem;min-height:auto}
+.nav-toggle{display:none}
+
+.main{padding:2.5rem clamp(1.25rem,3vw,3rem) 5rem;margin-left:var(--sidebar-w);margin-right:auto;width:auto;max-width:min(960px,calc(100vw - var(--sidebar-w) - 2rem));min-width:0;overflow-x:hidden}
+
+/* Hero */
+.hero{margin-bottom:2.5rem;padding:2rem 0 2rem 0;position:relative;overflow:hidden;max-width:100%}
+.hero::before{content:'';position:absolute;top:-2rem;right:0;width:min(220px,45vw);height:min(220px,45vw);background:radial-gradient(circle,rgba(0,82,217,0.10) 0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:0}
+.hero::after{content:'';position:absolute;bottom:0;left:20%;width:min(160px,35vw);height:min(160px,35vw);background:radial-gradient(circle,rgba(201,100,66,0.08) 0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:0}
+.hero > *{position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:600;color:var(--color-orange-dark);background:var(--color-orange-soft);padding:.3rem .875rem;border-radius:999px;margin-bottom:1rem;letter-spacing:.02em;border:1px solid rgba(201,100,66,0.18)}
+.hero-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--color-orange);flex-shrink:0}
+.hero h1{font-family:var(--font-display);font-size:clamp(1.875rem,5vw,2.875rem);font-weight:800;letter-spacing:-0.035em;line-height:1.12;margin-bottom:1rem;background:linear-gradient(128deg,var(--color-text) 30%,var(--color-blue-dark) 62%,var(--color-orange-dark) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-meta{font-size:.9375rem;color:var(--color-text-dim);display:flex;flex-wrap:wrap;gap:.5rem 1.25rem}
+.hero-meta span{display:flex;align-items:center;gap:.35rem}
+.hero-stats{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap}
+.hero-stat{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-md);padding:.75rem 1.125rem;min-width:100px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.hero-stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--gradient-brand-h);opacity:.7}
+.hero-stat-num{font-family:var(--font-mono);font-size:1.375rem;font-weight:700;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+.hero-stat-label{font-size:.6875rem;color:var(--color-text-dim);margin-top:.15rem;font-weight:500}
+
+/* Parts */
+.part{margin-bottom:1.75rem;border:1px solid var(--color-line);border-radius:var(--radius-md);background:var(--color-surface);overflow:hidden;box-shadow:var(--shadow-card);transition:box-shadow .3s var(--ease),transform .3s var(--ease);max-width:100%;min-width:0}
+.part:not(.collapsed){box-shadow:var(--shadow-card),0 0 0 1px rgba(0,82,217,0.07)}
+.part-header{display:flex;align-items:flex-start;justify-content:space-between;padding:1.25rem 1.375rem;cursor:pointer;user-select:none;background:var(--gradient-brand-soft);border-bottom:1px solid transparent;transition:background .2s var(--ease);gap:.75rem;min-height:44px;-webkit-tap-highlight-color:transparent}
+.part-header:active{background:var(--color-blue-soft)}
+.part-header-text{flex:1;min-width:0}
+.part-num{display:inline-block;font-family:var(--font-mono);font-size:.6875rem;font-weight:700;color:#fff;background:var(--gradient-brand);padding:.15rem .55rem;border-radius:4px;margin-bottom:.5rem;letter-spacing:.04em;box-shadow:0 2px 8px var(--color-blue-glow)}
+.part-header h2{font-family:var(--font-display);font-size:1.1875rem;font-weight:700;letter-spacing:-0.02em;line-height:1.35;overflow-wrap:break-word;word-break:break-word}
+.part-header .part-meta{font-size:.75rem;color:var(--color-text-dim);margin-top:.3rem;font-weight:400;line-height:1.4;overflow-wrap:break-word}
+.part-toggle{width:36px;height:36px;border-radius:var(--radius-sm);border:1.5px solid var(--color-line);background:var(--color-surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .35s var(--ease),background .2s var(--ease);color:var(--color-text-dim);font-size:.75rem;margin-top:.15rem}
+.part-toggle:active{transform:scale(.93)!important;background:var(--color-blue-soft)}
+.part.collapsed .part-toggle{transform:rotate(-90deg)}
+.part-body{padding:0 1.375rem;overflow:hidden;transition:max-height .45s var(--ease),opacity .3s var(--ease),padding .45s var(--ease)}
+.part.collapsed .part-body{max-height:0!important;opacity:0;padding-top:0!important;padding-bottom:0!important;overflow:hidden}
+.part:not(.collapsed) .part-body{padding:0 1.375rem 1.5rem;max-height:none;opacity:1;overflow:hidden}
+.part-source{font-size:.8125rem;color:var(--color-text-dim);padding:.875rem 1rem .875rem 1.125rem;background:var(--color-bg);border-radius:var(--radius-sm);margin:1.25rem 0 1.5rem;line-height:1.6;position:relative;border:1px solid var(--color-line);border-left:none;overflow-wrap:anywhere;word-break:break-word;max-width:100%}
+.part-source a{word-break:break-all}
+.part-source::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gradient-brand-h);border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+
+h3{font-family:var(--font-display);font-size:1.0625rem;font-weight:700;margin:1.75rem 0 .75rem;color:var(--color-text);display:flex;align-items:center;gap:.5rem}
+h3::before{content:'';width:4px;height:1em;background:var(--gradient-brand-h);border-radius:2px;flex-shrink:0}
+h4{font-size:.9375rem;font-weight:700;margin:1.25rem 0 .5rem;color:var(--color-text)}
+p,li{font-size:.9375rem;color:var(--color-text);margin-bottom:.625rem;overflow-wrap:break-word;word-break:break-word}
+ul,ol{padding-left:1.25rem;margin-bottom:1rem}
+hr{border:none;border-top:1px solid var(--color-line);margin:1.75rem 0}
+
+/* Pitfall cards */
+.pitfall{border:1px solid var(--color-line);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1.125rem;background:var(--color-bg);position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s var(--ease);max-width:100%;min-width:0}
+.pitfall::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--gradient-brand-h);border-radius:3px 0 0 3px;opacity:.85}
+.pitfall-num{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.75rem;font-weight:700;background:var(--gradient-brand);color:#fff;padding:.2rem .6rem;border-radius:6px;margin-bottom:.75rem;box-shadow:0 2px 10px var(--color-blue-glow)}
+.pitfall h4{margin-top:0;font-size:1rem}
+.pitfall-block{margin-bottom:.875rem;padding-left:.25rem}
+.pitfall-block strong{display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--color-blue-dark);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.pitfall-block strong::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--color-orange);flex-shrink:0}
+.pm-view{background:var(--gradient-brand-soft);border-radius:var(--radius-sm);padding:.875rem 1rem;margin-top:.875rem;font-size:.875rem;border:1px solid rgba(0,82,217,0.12);line-height:1.65;overflow-wrap:break-word;word-break:break-word;max-width:100%}
+.pm-view strong{color:var(--color-blue-dark)}
+
+/* Cards */
+.card-grid{display:grid;gap:1rem;margin:1.25rem 0;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr))}
+.card{background:var(--color-bg);border:1px solid var(--color-line);border-radius:var(--radius-md);padding:1.25rem;transition:transform .2s var(--ease),box-shadow .2s var(--ease);min-width:0;max-width:100%;overflow:hidden}
+.card-highlight{background:var(--gradient-brand-soft);border:1.5px solid rgba(0,82,217,0.16);box-shadow:0 4px 24px -6px rgba(0,82,217,0.12),0 2px 8px rgba(201,100,66,0.06);position:relative;overflow:hidden}
+.card-highlight::before{content:'✦';position:absolute;top:.875rem;right:1rem;font-size:.875rem;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:.75}
+.card-title{font-family:var(--font-display);font-weight:700;font-size:.9375rem;margin-bottom:.625rem;color:var(--color-blue-dark);display:flex;align-items:center;gap:.4rem}
+.card-title::before{content:'';width:8px;height:8px;border-radius:2px;background:var(--gradient-brand-h);transform:rotate(45deg);flex-shrink:0}
+.card ul{margin-bottom:0}
+.card li{font-size:.875rem;line-height:1.65}
+
+/* Tables - mobile scroll */
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border-radius:var(--radius-sm);border:1px solid var(--color-line);position:relative;max-width:100%;width:100%}
+.table-scroll::after{content:'← 表格可左右滑动 →';display:none;font-size:.6875rem;color:var(--color-text-dim);text-align:center;padding:.4rem;background:var(--color-bg);border-top:1px solid var(--color-line);letter-spacing:.02em}
+.data-table{width:100%;border-collapse:collapse;font-size:.8125rem;display:table;table-layout:auto}
+.data-table thead{background:linear-gradient(to bottom,var(--color-blue-soft),transparent)}
+.data-table th,.data-table td{border-bottom:1px solid var(--color-line);padding:.625rem .875rem;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:break-word;white-space:normal}
+.data-table tr:last-child td{border-bottom:none}
+.data-table th{font-weight:700;color:var(--color-text);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.data-table tbody tr{transition:background .15s var(--ease)}
+.data-table tbody tr:hover{background:var(--color-blue-soft)}
+
+code,.code-inline{font-family:var(--font-mono);font-size:.8125em;background:var(--color-code-bg);padding:.15em .45em;border-radius:5px;color:#44403c;border:1px solid rgba(0,0,0,0.05)}
+pre{background:var(--color-code-bg);border:1px solid var(--color-line);border-radius:var(--radius-sm);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--font-mono);font-size:.8125rem;line-height:1.6;-webkit-overflow-scrolling:touch}
+
+/* Terms */
+.term{cursor:help;border-bottom:1.5px dashed rgba(0,82,217,0.45);position:relative;color:var(--color-blue-dark);font-weight:500;transition:background .15s var(--ease)}
+.term:active{background:var(--color-blue-soft)}
+.term-tip{display:none;position:fixed;bottom:auto;background:#1c1917;color:#fafaf9;padding:.625rem .875rem;border-radius:var(--radius-sm);font-size:.8125rem;line-height:1.5;max-width:min(280px,calc(100vw - 2rem));z-index:500;box-shadow:var(--shadow-float);font-weight:400;pointer-events:none}
+.term-tip::after{display:none}
+.term:hover .term-tip,.term.active .term-tip{display:block}
+.term-sheet{display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;justify-content:center;padding:0}
+.term-sheet.open{display:flex}
+.term-sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.45);animation:fade-in .2s var(--ease)}
+.term-sheet-panel{position:relative;background:var(--color-surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:1.375rem 1.25rem calc(1.25rem + var(--safe-bottom));width:100%;max-height:40dvh;animation:slide-up .3s var(--ease);box-shadow:0 -8px 40px rgba(0,0,0,0.15);overflow:hidden}
+.term-sheet-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient-brand-h)}
+.term-sheet-handle{width:36px;height:4px;background:var(--color-line);border-radius:2px;margin:0 auto 1rem}
+.term-sheet-word{background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:var(--font-mono);font-size:.875rem;font-weight:700;margin-bottom:.5rem}
+.term-sheet-def{font-size:.9375rem;line-height:1.65;color:var(--color-text)}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.metric{display:inline-flex;align-items:baseline;font-family:var(--font-mono);font-weight:700;color:var(--color-blue-dark);background:var(--color-blue-soft);padding:.05em .35em;border-radius:4px;font-size:.9375em;border:1px solid rgba(0,82,217,0.10)}
+.layer-box{border-left:3px solid var(--color-blue);padding:.875rem 0 .875rem 1.125rem;margin:1rem 0;background:var(--gradient-brand-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.search-hit{background:rgba(255,200,50,0.45);border-radius:3px;padding:0 1px}
+.search-hidden{display:none!important}
+
+/* FAB buttons */
+.fab-group{position:fixed;bottom:calc(1.25rem + var(--safe-bottom));right:1rem;display:flex;flex-direction:column;gap:.625rem;z-index:200}
+.fab{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.125rem;transition:transform .2s var(--ease),opacity .3s var(--ease),box-shadow .2s var(--ease);box-shadow:var(--shadow-float)}
+.fab:active{transform:scale(.92)}
+.fab-toc{background:var(--color-surface);color:var(--color-blue-dark);border:1.5px solid rgba(0,82,217,0.15)}
+.fab-top{background:var(--gradient-brand);color:#fff;opacity:0;pointer-events:none;transform:translateY(8px)}
+.fab-top.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:90;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);animation:fade-in .25s var(--ease)}
+.overlay.open{display:block}
+
+/* Mobile bottom chapter bar */
+.mobile-chapters{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--color-line);padding:.5rem .75rem calc(.5rem + var(--safe-bottom));z-index:140;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:.375rem;flex-direction:row;align-items:center}
+.mobile-chapters::-webkit-scrollbar{display:none}
+.chapter-pill{flex-shrink:0;padding:.45rem .875rem;border-radius:999px;font-size:.75rem;font-weight:600;color:var(--color-text-dim);background:var(--color-bg);border:1.5px solid var(--color-line);cursor:pointer;transition:all .2s var(--ease);white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;-webkit-tap-highlight-color:transparent}
+.chapter-pill:active{transform:scale(.95)}
+.chapter-pill.active{background:var(--gradient-brand);color:#fff;border-color:transparent;box-shadow:0 3px 14px var(--color-blue-glow)}
+
+/* Desktop */
+@media(min-width:769px){
+  .read-progress{left:var(--sidebar-w);width:calc(100% - var(--sidebar-w))}
+  .term.active .term-tip{display:block}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card)}
+  .pitfall:hover{box-shadow:var(--shadow-sm)}
+}
+
+/* Mobile - Scene D optimized */
+@media(max-width:768px){
+  html{font-size:16px}
+  .mobile-header{display:flex}
+  .read-progress{top:calc(var(--mobile-header-h) + var(--safe-top))}
+  .layout{display:block;width:100%;max-width:100vw;overflow-x:hidden}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%);transition:transform .35s var(--ease);width:min(88vw,340px);height:100dvh;max-height:100dvh;box-shadow:8px 0 40px rgba(0,0,0,0.12);padding-top:calc(1.25rem + var(--safe-top))}
+  .sidebar.open{transform:translateX(0)}
+  .nav-toggle{display:none}
+  .main{padding:calc(var(--mobile-header-h) + var(--safe-top) + 1rem) 1rem calc(5.5rem + var(--safe-bottom));max-width:100%;width:100%;margin-left:0;box-sizing:border-box}
+  .hero{padding:0 0 1.5rem;margin-bottom:1.75rem}
+  .hero::before,.hero::after{display:none}
+  .hero h1{font-size:1.625rem;background:linear-gradient(128deg,var(--color-text) 30%,var(--color-blue-dark) 62%,var(--color-orange-dark) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-stats{gap:.5rem}
+  .hero-stat{flex:1 1 0;min-width:0;padding:.625rem .5rem}
+  .hero-stat-num{font-size:1.25rem}
+  .part{margin-bottom:1.25rem;border-radius:var(--radius-md)}
+  .part-header{padding:1rem 1rem}
+  .part-header h2{font-size:1.0625rem}
+  .part-body{padding:0 1rem!important}
+  .part:not(.collapsed) .part-body{padding:0 1rem 1.25rem!important}
+  .part-toggle{width:40px;height:40px;flex-shrink:0}
+  .part-source{font-size:.8125rem;padding:.75rem}
+  h3{font-size:1.0625rem}
+  p,li{font-size:1rem;line-height:1.75}
+  .card-grid{grid-template-columns:1fr}
+  .card{padding:1.125rem}
+  .pitfall{padding:1rem 1rem 1rem 1.125rem}
+  .table-scroll::after{display:block}
+  .data-table{font-size:.8125rem;min-width:0;width:100%}
+  .data-table th,.data-table td{padding:.5rem .625rem;font-size:.8125rem}
+  .term:hover .term-tip{display:none}
+  .mobile-chapters{display:flex}
+  .fab-group{bottom:calc(4.5rem + var(--safe-bottom));right:.875rem}
+}
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-bg:#0e1011;
+    --color-bg-mesh:
+      radial-gradient(ellipse 80% 50% at 10% -5%, rgba(0, 82, 217, 0.14), transparent 55%),
+      radial-gradient(ellipse 65% 45% at 92% 8%, rgba(201, 100, 66, 0.09), transparent 50%);
+    --color-surface:#16181a;
+    --color-surface-elevated:#1c1f22;
+    --color-text:#e7e9ec;
+    --color-text-dim:#8b9097;
+    --color-line:rgba(255,255,255,0.08);
+    --color-code-bg:#1a1d20;
+    --color-blue-soft:rgba(0, 82, 217, 0.14);
+    --color-orange-soft:rgba(201, 100, 66, 0.12);
+    --color-blue-glow:rgba(0, 82, 217, 0.25);
+    --shadow-card:0 1px 3px rgba(0,0,0,0.2),0 10px 36px -10px rgba(0,0,0,0.4);
+  }
+  .mobile-header,.mobile-chapters,.sidebar{background:rgba(22,24,26,0.92)}
+  .hero h1{background:linear-gradient(128deg,#e7e9ec 30%,#4d9aff 62%,#e8926a 100%);-webkit-background-clip:text;background-clip:text}
+  .hero-stat,.part,.card,.pitfall{background:var(--color-surface)}
+  .term-tip{background:#2a2d30}
+  .term-tip::after{border-top-color:#2a2d30}
+  .fab-toc{background:var(--color-surface);border-color:var(--color-line)}
+  code,.code-inline{color:#d6d3d1;border-color:rgba(255,255,255,0.06)}
+  .data-table thead{background:rgba(255,255,255,0.03)}
+}
+</style>
+</head>
+<body>
+<div class="read-progress" aria-hidden="true"><div class="read-progress-bar" id="readProgress"></div></div>
+
+<header class="mobile-header" id="mobileHeader">
+  <button class="fab fab-toc" id="navToggle" aria-label="打开目录" style="width:40px;height:40px;box-shadow:none;position:static;flex-shrink:0">☰</button>
+  <div style="flex:1;min-width:0">
+    <div class="mobile-header-title" id="mobileTitle">AI Agent 学习报告</div>
+    <div class="mobile-header-chapter" id="mobileChapter">第一部分</div>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<div class="sidebar-badge">离线可阅</div>
+<div class="sidebar-title">AI Agent 学习报告</div>
+<div class="sidebar-sub">六篇核心资料 + 两份附录<br>系统学习 · 随时查阅</div>
+</div>
+<div class="search-wrap">
+<input type="search" class="search-box" id="searchBox" placeholder="搜索关键词…" aria-label="搜索">
+</div>
+<nav><ul class="nav-list" id="navList">
+<li class="nav-part">正文</li>
+<li><a href="#part1">第一部分 · 生产环境十大错误</a></li>
+<li><a href="#part2">第二部分 · LangChain 2026 报告</a></li>
+<li><a href="#part3">第三部分 · Amazon 评估体系</a></li>
+<li><a href="#part4">第四部分 · 上下文工程</a></li>
+<li><a href="#part5">第五部分 · AI 原生工作方法论</a></li>
+<li><a href="#part6">第六部分 · 从零到一速成指南</a></li>
+<li class="nav-part">附录</li>
+<li><a href="#appendix-a">附录 A · 提示词工程速查</a></li>
+<li><a href="#appendix-b">附录 B · 术语表</a></li>
+</ul></nav>
+</aside>
+<main class="main" id="mainContent">
+<header class="hero">
+<h1>AI Agent 系统学习报告</h1>
+<p class="hero-meta">
+  <span>📚 6 篇正文 + 2 份附录</span>
+  <span>📱 移动端优化</span>
+  <span>🔒 离线可阅</span>
+</p>
+<div class="hero-stats">
+  <div class="hero-stat"><div class="hero-stat-num">6</div><div class="hero-stat-label">核心篇章</div></div>
+  <div class="hero-stat"><div class="hero-stat-num">10</div><div class="hero-stat-label">生产踩坑</div></div>
+  <div class="hero-stat"><div class="hero-stat-num">26</div><div class="hero-stat-label">术语收录</div></div>
+</div>
+</header>
+
+<section class="part" id="part1">
+<div class="part-header"><div class="part-header-text"><span class="part-num">PART 01</span><h2>第一部分：Agent 生产环境实战——十大常见错误</h2><div class="part-meta">入门第一课 · 建立生产环境直觉</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：<a href="https://cloud.tencent.com/developer/article/2669801" target="_blank">Agent编排的10个常见错误：生产环境踩坑总结</a> · 腾讯云开发者社区 · 2026-05-16</div>
+<p><span class="term">Agent<span class="term-tip">智能体 — 能自主规划、调用工具并完成目标的 AI 系统</span></span> 编排在 Demo 阶段看起来很简单：A 节点做完做 B 节点，B 节点做完做 C 节点。但一旦进入生产环境，并发、超时、失败、重试、降级、<span class="term">Observability<span class="term-tip">可观测性 — 追踪系统运行状态的能力</span></span>……每一个环节都可能出问题。以下总结生产环境中 10 个真实踩坑及解决方案。</p>
+
+<div class="pitfall">
+<span class="pitfall-num">#01</span>
+<h4>坑 1：串行执行所有任务，效率极低</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>需要同时获取用户信息、订单记录、商品详情。开发者写成了：先查用户 → 拿到结果后再查订单 → 拿到结果后再查商品。三个任务是顺序执行的。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>这三个任务之间没有依赖关系，完全可以并行执行。顺序执行的总耗时 = 任务1 + 任务2 + 任务3。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>使用并行节点，将无依赖的任务同时执行。并行执行的总耗时 = max(任务1, 任务2, 任务3)。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>用户感知的响应速度直接决定留存——无依赖的数据查询必须并行，否则产品 SLA 无法达标。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#02</span>
+<h4>坑 2：没有设置超时，节点永远挂起</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>某个节点调用外部 API，外部服务挂了，请求一直没有返回。整个工作流卡在这个节点上，直到超时（默认可能是几分钟甚至无限）。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>外部服务不可靠。没有超时保护的节点，可能成为整个工作流的阻塞点。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>每个节点设置合理的超时时间（如 30 秒、60 秒）；超时后进入异常处理分支，而不是无限等待；超时阈值根据节点特性设置（调用 LLM 可设长一些，调用内部 API 设短一些）。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>超时不是技术细节，是用户体验底线——必须在 PRD 中定义各环节的响应时间上限。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#03</span>
+<h4>坑 3：忽略重试机制，瞬时错误直接失败</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>网络抖动、限流、服务瞬时不稳，这些本可以自动恢复的错误，因为没有重试机制直接导致节点失败，整个工作流中断。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>生产环境中的失败很多是瞬时性的，自动重试可以解决大部分。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>为节点配置自动重试策略（如最多 3 次，间隔 1 秒、2 秒、4 秒）；区分可重试错误（限流、超时、网络）和不可重试错误（参数错误、权限不足）；重试次数过多时触发告警。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>区分「可恢复失败」与「不可恢复失败」，决定产品是静默重试还是向用户展示错误。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#04</span>
+<h4>坑 4：条件分支缺失默认兜底</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>分支条件写了：如果是 A 类问题走分支 A，B 类问题走分支 B。结果来了一个 C 类问题，没有匹配到任何分支，工作流直接中断。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>基于枚举值的分支，天然存在「枚举不全」的风险。业务变化后可能新增类型。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>每个条件节点增加「默认/兜底」分支；兜底分支可以走人工处理或记录异常并降级；兜底触发时记录日志，便于发现枚举遗漏。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>业务场景永远在变化——兜底分支是产品韧性的最低保障，不能省略。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#05</span>
+<h4>坑 5：上下文越传越大，Token 爆炸</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>节点 A 的输出传给节点 B，节点 B 把自己的输出也追加到上下文中，节点 C 再追加……处理 10 个节点后，上下文里塞了几万 Token。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>链式传递导致上下文不断膨胀。后续节点可能不需要前面的全部信息。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>明确每个节点需要的上下文范围；设置上下文最大长度（如 64K），超限时截断或摘要；关键信息提取后传给下游，而非原始数据。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>Token 成本与延迟是产品的隐性 KPI——上下文管理直接影响单次交互成本和响应速度。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#06</span>
+<h4>坑 6：没有熔断，雪崩效应</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>下游模型服务开始变慢，请求积压。上游还在持续发起新请求，导致整个系统响应越来越慢，最终全部超时。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>没有熔断机制时，一个服务的故障会级联放大，拖垮整个系统。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>设置熔断阈值（如连续失败 5 次或错误率超 50%）；熔断后快速失败，不再发请求到下游；熔断半开后逐步恢复，验证下游已正常。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>熔断保护的是整体可用性——产品需要在「部分功能降级」与「全站崩溃」之间做取舍。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#07</span>
+<h4>坑 7：节点粒度太粗，难以复用</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>一个节点做了太多事情：调用 LLM、解析结果、调用 API、写数据库。功能耦合在一起，其他场景想复用其中一部分都做不到。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>节点粒度是设计问题，不是技术问题。粗粒度节点灵活性和复用性都差。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>每个节点只做一件事；节点按能力类型拆分：LLM 调用节点、数据查询节点、结果解析节点、存储节点；细粒度节点可以组装成复杂工作流，也可以单独使用。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>模块化设计让产品迭代更快——新场景可以复用已有节点而非从零搭建。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#08</span>
+<h4>坑 8：并发资源不加控制，打爆服务</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>并行节点同时调用了 20 个 LLM 请求，每个请求消耗大量显存和 GPU 资源，导致模型服务 OOM 或响应极慢。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>并行是好事，但并行度需要控制。资源是有限的。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>设置并行节点的最大并发数（如最多 5 个同时执行）；使用队列缓冲超出并发限制的请求；对高成本节点（如 LLM 调用）单独设置限流。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>并发上限需要在成本预算和用户体验之间找到平衡点。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#09</span>
+<h4>坑 9：错误处理分支缺失，失败后无法恢复</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>正常流程写得很完整，但一旦某个节点失败，没有定义「失败了怎么办」。工作流直接中断，需要人工介入才能恢复。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>生产环境的失败是必然的。没有错误处理的设计，是不完整的设计。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>每个可能失败的节点都配置异常分支；异常处理动作：重试、降级、跳过、人工介入；关键节点失败时发送告警通知。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>每个失败路径都应有产品层面的「Plan B」——转人工、降级回答或引导用户重试。</div>
+</div>
+<div class="pitfall">
+<span class="pitfall-num">#10</span>
+<h4>坑 10：没有可观测性，出问题无从查起</h4>
+<div class="pitfall-block"><strong>错误表现</strong><p>工作流执行失败了，只知道「失败了」。不知道哪个节点失败的、输入是什么、错误是什么、耗时多久。</p></div>
+<div class="pitfall-block"><strong>问题分析</strong><p>Agent 编排是一个多节点、多分支的复杂执行过程。没有可观测性，就像在黑盒里调试。</p></div>
+<div class="pitfall-block"><strong>解决方案</strong><p>每个节点记录：开始时间、结束时间、输入、输出、错误信息；全链路追踪：一次工作流执行生成唯一 Trace ID，贯穿所有节点；可视化执行日志，支持按 Trace ID 检索和回放。</p></div>
+<div class="pm-view"><strong>产品经理视角：</strong>可观测性是产品迭代的数据基础——没有 Trace，就无法定位用户投诉的根因。</div>
+</div>
+<h3>避坑对照表</h3>
+<table class="data-table"><thead><tr><th>常见错误</th><th>解决方案</th></tr></thead><tbody>
+<tr><td>串行执行</td><td>无依赖任务改为并行</td></tr>
+<tr><td>无超时</td><td>每个节点设置超时 + 异常分支</td></tr>
+<tr><td>无视重试</td><td>配置自动重试策略</td></tr>
+<tr><td>分支无兜底</td><td>增加默认分支</td></tr>
+<tr><td>上下文膨胀</td><td>截断或摘要，控制长度</td></tr>
+<tr><td>无熔断</td><td>配置熔断阈值和恢复策略</td></tr>
+<tr><td>节点粒度过粗</td><td>按能力拆分为细粒度节点</td></tr>
+<tr><td>并发无控制</td><td>设置最大并发数 + 队列</td></tr>
+<tr><td>无错误处理</td><td>每个节点配置异常分支</td></tr>
+<tr><td>无可观测性</td><td>全链路追踪 + 日志记录</td></tr>
+</tbody></table>
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>Demo 能跑 ≠ 生产可用：并发、超时、重试、熔断、可观测性是上线前的必选项</li>
+<li>节点设计应遵循单一职责，便于复用和独立调试</li>
+<li>上下文和 Token 管理是成本和性能的双重杠杆</li>
+<li>每个分支和失败路径都需要产品层面的兜底策略</li>
+<li>Trace ID 全链路追踪是定位生产问题的第一工具</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="part2">
+<div class="part-header"><div class="part-header-text"><span class="part-num">PART 02</span><h2>第二部分：Agent 工程行业全景——LangChain 2026 年度报告</h2><div class="part-meta">了解行业全貌 · 市场在哪里、挑战是什么</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：<a href="https://www.langchain.com/state-of-agent-engineering" target="_blank">State of Agent Engineering</a> · LangChain · 2026</div>
+
+<h3>引言</h3>
+<p>进入 2026 年，组织不再问「是否要做 Agent」，而是「如何可靠、高效、规模化地部署 Agent」。LangChain 调研了超过 <span class="metric">1,340</span> 名专业人士（工程师、产品经理、业务领导与高管），揭示 AI Agent 的使用现状与挑战。</p>
+
+<h4>核心发现速览</h4>
+<ul>
+<li><strong>生产动量真实存在：</strong><span class="metric">57.3%</span> 受访者已有 Agent 在生产环境运行；大型企业领先采用</li>
+<li><strong>质量是生产杀手：</strong><span class="metric">32%</span> 将质量列为首要障碍；成本担忧较去年下降</li>
+<li><strong>可观测性已成标配：</strong><span class="metric">89%</span> 已实现 Agent 可观测性，远超评估（Evals）采用的 <span class="metric">52.4%</span></li>
+<li><strong>多模型是常态：</strong>OpenAI GPT 领先，但 Gemini、Claude、开源模型均有显著采用；Fine-tuning（微调）尚未广泛普及</li>
+</ul>
+
+<h3>什么是 Agent Engineering（Agent 工程）？</h3>
+<p><span class="term">Agent Engineering<span class="term-tip">Agent 工程 — 将 LLM 迭代打磨为可靠系统的工程过程</span></span> 是一个迭代过程：由于 Agent 具有<span class="term">Non-deterministic<span class="term-tip">非确定性 — 相同输入可能产生不同输出</span></span>，工程师需要快速迭代以持续改进 Agent 质量。</p>
+
+<h3>生产部署现状与企业规模差异</h3>
+<p>超过半数受访者（<span class="metric">57.3%</span>）已有 Agent 在生产环境运行，另有 <span class="metric">30.4%</span> 正在积极开发并计划部署。相比去年调研的 51% 生产部署率，组织正从 PoC 阶段迈向生产。</p>
+<p><strong>规模差异（文字描述图表数据）：</strong></p>
+<ul>
+<li><strong>10,000+ 人企业：</strong>生产部署 <span class="metric">67%</span>，积极开发中 <span class="metric">24%</span></li>
+<li><strong>&lt;100 人企业：</strong>生产部署 <span class="metric">50%</span>，积极开发中 <span class="metric">36%</span></li>
+</ul>
+<p>大型企业更快从试点走向持久系统，可能得益于平台团队、安全与可靠性基础设施的更大投入。</p>
+
+<h3>主流应用场景排名</h3>
+<p>受访者只能选择一项主要用例，数据如下：</p>
+<ul>
+<li><strong>客户服务（Customer Service）：</strong><span class="metric">26.5%</span> — 最常见，表明团队正将 Agent 直接面向客户</li>
+<li><strong>研究与数据分析（Research &amp; Data Analysis）：</strong><span class="metric">24.4%</span></li>
+<li><strong>内部工作流自动化：</strong><span class="metric">18%</span> — 提升员工效率</li>
+<li>其他用例（代码生成、内容创作等）分布更分散，表明 Agent 应用正在多元化</li>
+</ul>
+<p><strong>10,000+ 人企业差异：</strong>内部生产力居首（<span class="metric">26.8%</span>），客户服务（<span class="metric">24.7%</span>）与研究分析（<span class="metric">22.2%</span>）紧随其后——大企业可能优先驱动内部效率，再同步面向终端用户部署。</p>
+
+<h3>最大落地障碍</h3>
+<ul>
+<li><strong>质量（Quality）— 首要障碍，<span class="metric">32%</span>：</strong>涵盖准确性、相关性、一致性，以及维持正确语气、遵守品牌/政策指南的能力</li>
+<li><strong>延迟（Latency）— 第二大，<span class="metric">20%</span>：</strong>Agent 进入客户服务、代码生成等面向客户场景时，响应时间成为 UX 关键；更强多步 Agent 质量更高但响应更慢</li>
+<li><strong>成本：</strong>较去年更少被提及——模型价格下降与效率提升转移了关注焦点</li>
+</ul>
+<p><strong>2,000+ 人企业差异：</strong>质量仍居首，但<strong>安全（Security）</strong>跃升为第二（<span class="metric">24.9%</span>），超过延迟。10,000+ 人企业的开放式回答指出：幻觉（Hallucination）、输出一致性、<span class="term">Context Engineering<span class="term-tip">上下文工程 — 策划和维护 LLM 推理上下文</span></span> 与大规模上下文管理是质量保障的最大挑战。</p>
+
+<h3>可观测性实践</h3>
+<p>追踪多步推理链与工具调用的能力已成为 Agent 的「标配」：</p>
+<ul>
+<li><span class="metric">89%</span> 组织已实现某种形式的可观测性</li>
+<li><span class="metric">62%</span> 具备详细追踪，可检查单个 Agent 步骤与工具调用</li>
+<li>已有生产 Agent 的组织：可观测性 <span class="metric">94%</span>，完整追踪 <span class="metric">71.5%</span></li>
+</ul>
+<p>没有 Agent 推理与行动的可视性，团队无法可靠调试失败、优化性能或建立内外部信任。</p>
+
+<h3>评估与测试实践</h3>
+<ul>
+<li><strong>离线评估（Offline Evals）：</strong><span class="metric">52.4%</span> 在测试集上运行</li>
+<li><strong>在线评估（Online Evals）：</strong><span class="metric">37.3%</span>，正在增长</li>
+<li>生产 Agent 组织：「不评估」比例从 <span class="metric">29.5%</span> 降至 <span class="metric">22.8%</span>；在线评估 <span class="metric">44.8%</span></li>
+<li>运行评估的组织中，近 <span class="metric">25%</span> 同时采用离线与在线评估</li>
+<li><strong>人工审查（Human Review）：</strong><span class="metric">59.8%</span></li>
+<li><strong>LLM-as-Judge：</strong><span class="metric">53.3%</span></li>
+<li><strong>传统 ML 指标（ROUGE/BLEU）：</strong>采用有限，不太适合开放式 Agent 交互</li>
+</ul>
+
+<h3>模型与工具生态格局</h3>
+<ul>
+<li>超过 <span class="metric">2/3</span> 组织使用 OpenAI GPT 模型</li>
+<li>超过 <span class="metric">3/4</span> 在生产或开发中使用多个模型——按复杂度、成本、延迟路由任务</li>
+<li>约 <span class="metric">1/3</span> 组织自托管模型（成本优化、数据驻留、监管约束）</li>
+<li><strong>Fine-tuning（微调）：</strong><span class="metric">57%</span> 未做微调，依赖基础模型 + Prompt Engineering + <span class="term">RAG<span class="term-tip">检索增强生成 — 从外部知识库检索信息增强 LLM 回答</span></span>；微调需大量数据、标注、训练基础设施，保留给高影响/专业化场景</li>
+</ul>
+
+<h3>日常使用的 Agent 类型（开放式回答归纳）</h3>
+<ol>
+<li><strong>编码 Agent 主导：</strong>Claude Code、Cursor、GitHub Copilot、Amazon Q、Windsurf 等——代码生成、调试、测试、导航代码库</li>
+<li><strong>研究与深度研究 Agent：</strong>ChatGPT、Claude、Gemini、Perplexity——探索新领域、总结长文档、跨源综合</li>
+<li><strong>基于 LangChain/LangGraph 的自定义 Agent：</strong>QA 测试、内部知识库搜索、SQL/Text-to-SQL、需求规划、客户支持、工作流自动化</li>
+<li>仍有相当比例用户尚未超越 LLM 聊天或编码辅助——「全面 Agent 化」仍处于早期</li>
+</ol>
+
+<h3>调研方法论</h3>
+<ul>
+<li><strong>时间：</strong>2025 年 11 月 18 日 – 12 月 2 日，公开调研 2 周</li>
+<li><strong>样本量：</strong>1,340 份有效回复</li>
+<li><strong>行业 Top 5：</strong>科技 <span class="metric">63%</span>、金融 <span class="metric">10%</span>、医疗 <span class="metric">6%</span>、教育 <span class="metric">4%</span>、消费品/制造各 <span class="metric">3%</span></li>
+<li><strong>公司规模：</strong>&lt;100 人 <span class="metric">49%</span>、100-500 <span class="metric">18%</span>、500-2000 <span class="metric">15%</span>、2000-10000 <span class="metric">9%</span>、10000+ <span class="metric">9%</span></li>
+</ul>
+
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>Agent 生产部署已过临界点（57%+），问题从「做不做」转向「怎么做好」</li>
+<li>质量 > 延迟 > 安全（大企业）是落地优先级排序</li>
+<li>可观测性（89%）远领先于评估（52%）——「能看见」比「能量化」更成熟</li>
+<li>多模型路由已成标准实践，微调仍是少数派选择</li>
+<li>客户服务与研究分析是当前两大主战场，编码 Agent 是开发者日常最高频工具</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="part3">
+<div class="part-header"><div class="part-header-text"><span class="part-num">PART 03</span><h2>第三部分：Agent 评估体系——Amazon 实战经验</h2><div class="part-meta">系统评估 Agent 质量 · 建立评估思维</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：<a href="https://aws.amazon.com/blogs/machine-learning/evaluating-ai-agents-real-world-lessons-from-building-agentic-systems-at-amazon/" target="_blank">Evaluating AI agents: Real-world lessons from Amazon</a> · AWS Machine Learning Blog</div>
+
+<p>生成式 AI 行业已从 LLM 驱动应用演进为 <span class="term">Agentic AI<span class="term-tip">智能体 AI — 能自主规划、调用工具、迭代解决问题的 AI 系统</span></span>。Amazon 自 2025 年起已在各组织构建了数千个 Agent。单一模型 Benchmark 不足以评估 Agent——新范式需评估工具选择准确性、多步推理连贯性、记忆检索效率及任务完成率等系统涌现行为。</p>
+
+<h3>Amazon Agent 评估框架概览</h3>
+<p>框架包含两大组件：<strong>自动化 Agent 评估工作流</strong> + <strong>Agent 评估库</strong>（基于 Amazon Bedrock AgentCore Evaluations）。</p>
+
+<h4>四步评估工作流</h4>
+<ol>
+<li><strong>定义评估输入：</strong>通常是 Agent 执行的 Trace 文件——离线 Trace（任务完成后上传）或在线 Trace（定义评估维度与指标）</li>
+<li><strong>自动生成评估指标：</strong>评估库生成默认与用户自定义指标</li>
+<li><strong>共享评估结果：</strong>通过 S3 存储桶或 Dashboard 可视化 Trace 可观测性与评估结果</li>
+<li><strong>分析与监控：</strong>Agent 性能审计；定义规则在性能下降时发送通知；<span class="term">HITL<span class="term-tip">Human-in-the-Loop（人在回路） — 人工参与审核与校准</span></span> 机制定期审计 Trace 子集</li>
+</ol>
+
+<h3>三层评估架构</h3>
+<div class="layer-box">
+<h4>底层（Bottom Layer）：基础模型评估</h4>
+<p>对多个 Foundation Model 进行 Benchmark，选择驱动 Agent 的合适模型，衡量不同模型对 Agent 整体质量与延迟的影响。</p>
+</div>
+<div class="layer-box">
+<h4>中间层（Middle Layer）：组件评估</h4>
+<p>评估 Agent 各组件性能：意图检测、多轮对话、记忆、LLM 推理与规划、工具使用等。例如：Agent 是否正确理解用户意图？LLM 如何通过 <span class="term">CoT<span class="term-tip">Chain-of-Thought（思维链） — 逐步推理的提示策略</span></span> 驱动工作流规划？工具选择与执行是否与计划一致？</p>
+</div>
+<div class="layer-box">
+<h4>上层（Upper Layer）：任务完成评估</h4>
+<p>评估 Agent 最终响应、任务完成度、是否达成用例目标；涵盖整体责任与安全、成本及客户体验影响。</p>
+</div>
+
+<h3>评估指标定义（完整）</h3>
+
+<h4>最终响应质量（Final Response Quality）</h4>
+<ul>
+<li><strong>Correctness（正确性）：</strong>AI 助手响应的事实准确性与正确性</li>
+<li><strong>Faithfulness（忠实度）：</strong>响应是否与对话历史保持一致</li>
+<li><strong>Helpfulness（有用性）：</strong>响应如何有效帮助用户推进目标</li>
+<li><strong>Response Relevance（响应相关性）：</strong>响应与具体问题的匹配程度</li>
+<li><strong>Conciseness（简洁性）：</strong>信息传达效率，是否简洁且不遗漏关键信息</li>
+</ul>
+
+<h4>任务完成（Task Completion）</h4>
+<ul>
+<li><strong>Goal Success（目标成功）：</strong>AI 助手是否在会话中成功完成所有用户目标</li>
+<li><strong>Goal Accuracy（目标准确性）：</strong>将输出与 Ground Truth 对比</li>
+</ul>
+
+<h4>工具使用（Tool Use）</h4>
+<ul>
+<li><strong>Tool Selection Accuracy（工具选择准确性）：</strong>是否为给定情境选择了合适工具</li>
+<li><strong>Tool Parameter Accuracy（工具参数准确性）：</strong>调用工具时是否正确使用了上下文信息</li>
+<li><strong>Tool Call Error Rate（工具调用错误率）：</strong>工具调用失败的频率</li>
+<li><strong>Multi-turn Function Calling Accuracy（多轮函数调用准确性）：</strong>多工具是否被调用、调用顺序是否正确</li>
+</ul>
+
+<h4>记忆（Memory）</h4>
+<ul>
+<li><strong>Context Retrieval（上下文检索）：</strong>评估从记忆中检索相关上下文的准确性，平衡精确率与召回率</li>
+</ul>
+
+<h4>多轮对话（Multi-turn）</h4>
+<ul>
+<li><strong>Topic Adherence Classification（主题 adherence 分类）：</strong>多主题对话中是否保持在预定义领域</li>
+<li><strong>Topic Adherence Refusal（主题 adherence 拒绝）：</strong>Agent 是否拒绝回答特定主题的问题</li>
+</ul>
+
+<h4>推理（Reasoning）</h4>
+<ul>
+<li><strong>Grounding Accuracy（ grounding 准确性）：</strong>模型是否理解任务、恰当选择工具，CoT 是否与上下文及工具返回数据一致</li>
+<li><strong>Faithfulness Score（忠实度分数）：</strong>推理过程的逻辑一致性</li>
+<li><strong>Context Score（上下文分数）：</strong>Agent 每一步是否有上下文依据</li>
+</ul>
+
+<h4>责任与安全（Responsibility and Safety）</h4>
+<ul>
+<li><strong>Hallucination（幻觉）：</strong>输出是否与已知知识一致，是否包含虚构/误导内容</li>
+<li><strong>Toxicity（毒性）：</strong>是否包含有害、冒犯、歧视性语言</li>
+<li><strong>Harmfulness（危害性）：</strong>是否包含侮辱、仇恨言论、暴力、不当性内容、刻板印象等</li>
+</ul>
+
+<hr>
+<h3>案例一：Amazon 购物助手——工具使用评估</h3>
+<p>购物助手需与数百甚至数千个底层 API/Web 服务交互，提供客户画像、产品发现、库存查询、下单等个性化体验。手动接入 API 通常需数月。</p>
+<p><strong>挑战：</strong>工具 Schema 与语义描述不精确 → 运行时错误工具选择 → 无关 API 调用 → 上下文膨胀 → 延迟与成本上升。</p>
+<p><strong>解决方案：</strong></p>
+<ul>
+<li>建立跨组织工具 Schema 与描述标准化治理框架</li>
+<li>LLM 驱动的 API 自助接入系统，自动生成标准化工具 Schema 与描述</li>
+<li>从历史 API 调用日志合成 Golden Dataset 用于回归测试</li>
+<li>用工具选择准确性、参数准确性、多轮函数调用准确性系统性评估</li>
+</ul>
+
+<hr>
+<h3>案例二：Amazon 客服 Agent——意图识别评估</h3>
+<p>编排 Agent 使用推理模型检测客户意图，决定路由到哪个专用 Resolver（工具或 Sub-agent）。意图识别错误 → 错误路由 → 无关回复 → 客户挫败 → 转人工成本上升。</p>
+<p><strong>评估方法：</strong></p>
+<ul>
+<li>LLM Simulator：LLM 驱动的虚拟客户 Persona 模拟多样用户场景</li>
+<li>模拟数据集：匿名历史交互中的用户查询 + Ground Truth 意图对</li>
+<li>对比 Agent 生成意图与 Ground Truth，验证意图正确性</li>
+<li>同时评估任务完成（最终响应与意图解决）及多轮指标（主题 adherence 分类与拒绝）</li>
+</ul>
+
+<hr>
+<h3>案例三：Amazon 多 Agent 系统——卖家助手评估</h3>
+<p>工作流：LLM Planner 接收请求 → 分解子任务 → 分配给专用 Sub-agent → Sub-agent 自主执行 → 回报编排 Agent → 聚合输出。</p>
+<p><strong>评估维度：</strong></p>
+<ul>
+<li>各专用 Agent 的任务完成、推理、工具使用、记忆检索</li>
+<li><strong>Planning Score（规划分数）：</strong>子任务是否成功分配给 Sub-agent</li>
+<li><strong>Communication Score（通信分数）：</strong>Sub-agent 间通信消息质量</li>
+<li><strong>Collaboration Success Rate（协作成功率）：</strong>子任务成功完成百分比</li>
+<li>HITL 评估 Agent 间通信、任务分解合理性、冲突解决策略、多 Agent 决策逻辑一致性</li>
+</ul>
+
+<hr>
+<h3>经验教训与最佳实践</h3>
+<ol>
+<li><strong>多维度 holistic 评估：</strong>超越传统准确率，涵盖质量（推理连贯性、工具选择、任务完成）、性能（延迟、吞吐、资源利用）、责任（安全、毒性、偏见、幻觉）、成本（推理、工具调用、人工纠错）</li>
+<li><strong>用例特定评估：</strong>如客服需客户满意度、首次解决率、情感分析；需与领域专家协作定义成功标准与 Golden Dataset</li>
+<li><strong>HITL 是关键组件：</strong>评估推理链、多步工作流连贯性、与业务需求对齐；提供 Ground Truth 标签；校准 LLM-as-Judge 与人工偏好</li>
+<li><strong>生产环境持续评估：</strong>预部署评估无法完全捕获生产特性；监控真实用户行为、使用模式与边缘案例；追踪关键指标、告警阈值、异常检测；发现问题后模型重训、上下文工程优化</li>
+</ol>
+
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>Agent 评估必须三层递进：模型 → 组件 → 任务完成</li>
+<li>工具 Schema 标准化是大规模 Agent 集成的先决条件</li>
+<li>LLM Simulator + Golden Dataset 是意图识别评估的有效范式</li>
+<li>多 Agent 系统需要额外的协作指标（规划、通信、协作成功率）</li>
+<li>HITL 不是可选项，而是高 stakes 场景的质量保障</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="part4">
+<div class="part-header"><div class="part-header-text"><span class="part-num">PART 04</span><h2>第四部分：上下文工程——Anthropic 官方指南</h2><div class="part-meta">从 Prompt Engineering 进阶到 Context Engineering</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：<a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank">Effective context engineering for AI agents</a> · Anthropic Engineering · 2025-09-29</div>
+
+<p>上下文（Context）是 AI Agent 的关键但有限资源。本文探讨如何有效策划和管理驱动 Agent 的上下文。</p>
+
+<h3>Context Engineering vs. Prompt Engineering</h3>
+<p>在 Anthropic 看来，<span class="term">Context Engineering<span class="term-tip">上下文工程 — 策划和维护 LLM 推理时最优 Token 集合的策略</span></span> 是 <span class="term">Prompt Engineering<span class="term-tip">提示词工程 — 编写和组织 LLM 指令以获得最佳结果</span></span> 的自然演进。</p>
+<ul>
+<li><strong>Prompt Engineering：</strong>聚焦如何编写有效 Prompt，尤其是 System Prompt——适用于一次性分类或文本生成</li>
+<li><strong>Context Engineering：</strong>策划和维护 LLM 推理期间的最优 Token 集合——包括 System Instructions、Tools、<span class="term">MCP<span class="term-tip">Model Context Protocol（模型上下文协议） — 标准化 AI 与外部工具/数据交互的协议</span></span>、外部数据、消息历史等</li>
+</ul>
+<p>Agent 在循环中运行，不断产生可能与下一轮推理相关的数据，必须周期性精炼。Context Engineering 是策划「从不断演变的信息宇宙中选择什么放入有限上下文窗口」的艺术与科学——每次决定传递给模型什么时都会发生。</p>
+
+<h3>为什么 Context Engineering 对 Agent 至关重要</h3>
+<p>尽管 LLM 速度越来越快、能处理越来越大的数据量，但我们观察到 LLM 像人类一样，在某一节点会失焦或混乱——这就是 <span class="term">Context Rot<span class="term-tip">上下文腐化 — 上下文 Token 增多时模型准确回忆信息能力下降</span></span>。</p>
+<ul>
+<li>上下文必须被视为具有递减边际效用的有限资源</li>
+<li>LLM 有「注意力预算（Attention Budget）」——每个新 Token 都会消耗预算</li>
+<li>Transformer 架构使每个 Token 关注整个上下文，产生 n² 成对关系</li>
+<li>上下文越长，捕获这些关系的能力越 stretched——上下文大小与注意力焦点之间存在自然张力</li>
+<li>Position Encoding Interpolation 等技术允许更长序列，但 Token 位置理解会有所退化</li>
+</ul>
+
+<h3>有效上下文的组成</h3>
+
+<h4>System Prompt（系统提示词）</h4>
+<p>应极其清晰，使用简单直接的语言，在合适的「高度（Altitude）」呈现想法：</p>
+<ul>
+<li><strong>过高（失败模式 1）：</strong>硬编码复杂 brittle 逻辑——创造脆弱性</li>
+<li><strong>过低（失败模式 2）：</strong>模糊的高层指导——未给 LLM 具体信号</li>
+<li><strong>最优：</strong>足够具体以有效引导行为，又足够灵活以提供强启发式</li>
+</ul>
+<p>建议组织为 distinct sections（<code>&lt;background_information&gt;</code>、Tool Guidance、Output Description 等），用 XML 标签或 Markdown 标题分隔。追求<strong>最小但完整</strong>的信息集——minimal 不等于 short。</p>
+
+<h4>Tools（工具）</h4>
+<p>工具定义 Agent 与信息/行动空间的契约。好工具应：</p>
+<ul>
+<li>返回 Token 高效的信息</li>
+<li>鼓励高效的 Agent 行为</li>
+<li>自包含、健壮、意图清晰——类似设计良好的代码库函数</li>
+<li>避免 bloated tool sets——若人类工程师无法确定该用哪个工具，Agent 更不行</li>
+</ul>
+
+<h4>Examples（示例 / Few-shot）</h4>
+<p>继续强烈建议 Few-shot Prompting，但<strong>不要</strong>在 Prompt 中堆砌 edge case 规则清单。应策划一组 diverse、canonical 的示例，有效展示 Agent 预期行为——对 LLM 而言，示例是「一图胜千言」。</p>
+
+<h4>Message History（消息历史）</h4>
+<p>总体指导： thoughtful 且 tight——信息丰富但精简。</p>
+
+<h3>上下文检索与 Agent 搜索策略</h3>
+<p>Anthropic 对 Agent 的定义：LLM 在循环中自主使用工具。</p>
+
+<h4>三种策略对比</h4>
+<table class="data-table"><thead><tr><th>策略</th><th>描述</th><th>适用场景</th></tr></thead><tbody>
+<tr><td><strong>Pre-retrieval（预检索）</strong></td><td>推理前用 Embedding 检索所有相关数据</td><td>内容相对静态的场景</td></tr>
+<tr><td><strong>Just-in-time（即时检索）</strong></td><td>维护轻量标识符（文件路径、查询、链接），运行时动态加载</td><td>大型数据库、动态内容</td></tr>
+<tr><td><strong>Hybrid（混合策略）</strong></td><td>部分数据预加载 + Agent 自主探索</td><td>Claude Code：CLAUDE.md 预加载 + glob/grep 即时检索</td></tr>
+</tbody></table>
+
+<p><strong>Just-in-time 优势：</strong>模拟人类认知——不记忆整个 corpus，而是通过文件系统、索引、书签按需检索。Metadata（文件夹层级、命名约定、时间戳）提供行为精炼信号。支持 Progressive Disclosure（渐进式披露）——Agent 逐层发现相关上下文。</p>
+<p><strong>Trade-off：</strong>运行时探索比预计算检索慢；Agent 可能误用工具、走死胡同。混合策略可能更适合法律、金融等动态性较低的场景。</p>
+
+<h3>长期任务的三种关键技术</h3>
+<p>对于跨越数分钟到数小时、Token 超过上下文窗口的任务（大型代码迁移、综合研究项目）：</p>
+
+<h4>1. Compaction（压缩）</h4>
+<p>对话接近上下文窗口限制时，总结内容并重新启动新上下文窗口。</p>
+<ul>
+<li>Claude Code 实践：将消息历史传给模型总结，保留架构决策、未解决 Bug、实现细节，丢弃冗余工具输出</li>
+<li>压缩后继续：压缩上下文 + 最近访问的 5 个文件</li>
+<li>艺术在于选择保留 vs 丢弃——过度压缩会丢失后期才显现重要性的 subtle 上下文</li>
+<li>最轻量的压缩形式：<strong>Tool Result Clearing</strong>——清除历史中的原始工具调用结果</li>
+</ul>
+
+<h4>2. Structured Note-taking（结构化笔记 / Agentic Memory）</h4>
+<p>Agent 定期将笔记持久化到上下文窗口外的 Memory，后续再拉回上下文。</p>
+<ul>
+<li>Claude Code 创建 to-do list；自定义 Agent 维护 NOTES.md</li>
+<li><strong>Claude 打 Pokémon 案例：</strong>Agent 在数千步游戏中维护精确计数（「过去 1,234 步在 Route 1 训练，Pikachu 升了 8 级，目标 10 级」）；自发开发区域地图、成就记录、战斗策略笔记；上下文重置后读取笔记继续多小时训练——实现单上下文窗口不可能的长程策略</li>
+<li>Sonnet 4.5 发布的 Memory Tool：基于文件的 Memory 系统，Agent 可跨 Session 积累知识库</li>
+</ul>
+
+<h4>3. Sub-agent Architectures（子 Agent 架构）</h4>
+<p>专用 Sub-agent 处理聚焦任务，各自拥有干净的上下文窗口。主 Agent 协调高层计划，Sub-agent 做深度技术工作或工具检索。</p>
+<ul>
+<li>Sub-agent 可能探索数万 Token，但只返回 1,000-2,000 Token 的 condensed summary</li>
+<li>详细搜索上下文隔离在 Sub-agent 内，主 Agent 聚焦综合与分析</li>
+<li>多 Agent 研究系统显示：复杂研究任务上 Substantial Improvement over single-agent</li>
+</ul>
+<p><strong>选择指南：</strong>Compaction 适合需要大量 back-and-forth 的任务；Note-taking 适合有清晰里程碑的迭代开发；Multi-agent 适合复杂研究与分析（并行探索收益大）。</p>
+
+<h3>Claude Code 实践案例</h3>
+<p>Claude Code 是混合策略的典型：CLAUDE.md 文件 upfront 加载到上下文；glob、grep 等原语允许 Just-in-time 导航环境、检索文件——绕过 stale indexing 和复杂语法树问题。对大型数据库执行复杂数据分析：模型编写 targeted query、存储结果、用 head/tail 分析大量数据——无需将完整数据对象加载到上下文。</p>
+
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>Context Engineering 是 Prompt Engineering 在 Agent 时代的自然演进——管理整个上下文状态而非仅 System Prompt</li>
+<li>上下文是有限资源：Attention Budget 随 Token 增加而递减</li>
+<li>System Prompt 追求「最小但完整」；Tools 应精简无重叠；Examples 重质不重量</li>
+<li>检索策略：Pre-retrieval / Just-in-time / Hybrid 三选一或组合</li>
+<li>长期任务三板斧：Compaction、Structured Notes、Sub-agent Architecture</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="part5">
+<div class="part-header"><div class="part-header-text"><span class="part-num">PART 05</span><h2>第五部分：AI 原生工作方法论（日常随查手册）</h2><div class="part-meta">日常 AI 协作操作指南 · 贯穿所有实践环节</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：AI 原生工作报告（PDF）· 十个关键词结构</div>
+<p>研究团队通过十个关键词，系统梳理 AI 协作的方法论。以下为完整核心观点与行动建议。</p>
+
+<div class="pitfall">
+<h4>序：信任鸿沟</h4>
+<p><strong>核心观点：</strong>可靠不等于不出错，可靠是出错之后还能接住。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>不追求 AI 零出错。每次犯错，记下错误类型和修复方式。经历过错误并被解释清楚的信任，比从未出错的信任更结实。</li><li>复杂任务人要留在驾驶座上，简单任务可放手让跑。注意保留了多少主动检查环节，控制粒度要匹配任务复杂度。</li><li>一号位带头打破「不愿告诉同事自己在用 AI」的沉默。坦诚聊哪里用得顺、哪里踩坑。信任在透明对话中生长。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Agent 产品的容错设计（Graceful Degradation）和 HITL 机制，是建立用户信任的产品基础设施。</div>
+</div>
+<div class="pitfall">
+<h4>关键词一：驾驭工程</h4>
+<p><strong>核心观点：</strong>人设计环境，AI 在环境中执行——核心范式跃迁。同一个模型，换一套基础设施，表现天差地别。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>每次 AI 犯错，花时间把修复方案工程化，让它再也不犯同样的错。</li><li>对 AI 产出不满意时，克制直接改的冲动——问：能不能写一条规则、建一个模板、加一道检查来规避？</li><li>对照四象限（前馈/反馈 × 确定性/推理性）标出已有与缺失。大多数人只做了前馈（说清楚要求），反馈（做完后自动检验）才是更高性价比的优化方向。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Agent 编排中的节点设计、重试策略、评估 Gate 就是「驾驭工程」——把一次性的 Prompt 修复转化为持久的工作流规则。</div>
+</div>
+<div class="pitfall">
+<h4>关键词二：记忆</h4>
+<p><strong>核心观点：</strong>精确遗忘比完美记忆更重要。核心挑战不只是怎么记住更多，还要忘得更精确。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>在工作空间放一个 200 行以内的记忆起点文件（markdown），声明核心约定、常见错误、偏好设置。每周看一眼，超了再优化结构。</li><li>记忆系统最容易犯的错是只写入不管理。每隔一两周审查：哪些过时了？哪些重复了？哪些可以合并？</li><li>建立关联：这个决策和那次失败有什么因果关系？碎片连成网络之后，才能推理、迁移、产生新洞见。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Agent Memory 架构（短期上下文 + 长期持久化 + 定期 Compaction）直接对应此关键词——精确遗忘是 Context Engineering 的核心技能。</div>
+</div>
+<div class="pitfall">
+<h4>关键词三：技能</h4>
+<p><strong>核心观点：</strong>最好用的，是自己持续维护的 Skills。成熟的 Skill 会越来越短，最终留下：精准描述、领域知识、踩坑记录。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>自己写一个 Skill，不超过 50 行。提炼最常重复教 AI 的做事方式：精准触发描述、AI 学不到的领域知识、从失败中总结的踩坑记录。</li><li>定期清理合并 Skills。单个 Skill 超过 500 字，大概率六成不必要。模型已经会做的指令直接删。</li><li>不要写显而易见的东西。聚焦能推动 AI 超越默认思路的信息。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Cursor Skills / Agent Skills 是 Agent 项目的「可复用 SOP」——把团队最佳实践工程化，减少每次从零 Prompt 的成本。</div>
+</div>
+<div class="pitfall">
+<h4>关键词四：评估</h4>
+<p><strong>核心观点：</strong>可靠的评估与反馈是方向盘，是质量的前提。AI 的自评比人更严重——别等它学会自省，给它一个独立的裁判。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>给 AI 加一个独立审查者。同一个模型，开一个新对话窗口就够。分离「做事的上下文」和「判断的上下文」。</li><li>回顾最近 AI 出过的 3 个错，变成检查项。下次类似任务完成后跑一遍——这就是质量回归测试 v0.1。</li><li>发现错误时，别只说「错了」。把「为什么错」和「怎么改」一起写进去——每次违规都是一次微型培训。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>对应 Amazon 三层评估框架和 LangChain 报告的 Evals 实践——离线 Golden Dataset + LLM-as-Judge + HITL 是 Agent 质量保障的标准组合。</div>
+</div>
+<div class="pitfall">
+<h4>关键词五：上下文管理</h4>
+<p><strong>核心观点：</strong>停止把你的人生故事放进去。信息太少让 AI 发散，信息太多也让 AI 犯蠢——它太听话了，把所有指令都当回事。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>首轮输入只放三样东西：一句话任务目标、关键约定、非标准流程。其余按需调用。</li><li>别害怕清空对话重新开始。进度笔记存入文件后，清空往往比死撑压缩更高效。对话太长后 AI 会重复旧模式、忽略新指令。</li><li>过时内容留在上下文里是在主动毒化 AI 的判断。每隔一段时间审查规则和参考材料——删掉比添加更重要。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Anthropic Context Engineering 的核心原则：最小高信号 Token 集。Agent 每个节点的上下文传递范围必须精确定义。</div>
+</div>
+<div class="pitfall">
+<h4>关键词六：工作流</h4>
+<p><strong>核心观点：</strong>人类工程师始终是这场演出的导演。有工具不等于有工作流——真正卡住大家的是重新审视整条流程的那一步。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>画出最关键的工作流，标出所有手动传递数据、上下文、状态的环节——这些「人类胶水」位置往往是最大效率漏洞。</li><li>检验 AI 改造是否真的在重新设计：有没有移除交接？有没有并行化？有没有把人移到异常处理？有没有增加评估循环？</li><li>好的工作流是飞轮。记录哪些步骤 AI 做得好、哪些需要人介入，回注到设计中。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Agent 编排（LangGraph / Dify Workflow）的价值在于重新设计端到端流程，而非加速单个节点——产品经理应主导流程重设计。</div>
+</div>
+<div class="pitfall">
+<h4>关键词七：多智能体</h4>
+<p><strong>核心观点：</strong>用好一个再用多个。绝大多数失败来自规则没说清楚、分工不够细。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>单 Agent + 好指令 + 合适工具能搞定 90% 场景。确认真的到了瓶颈（上下文放不下、需要并行、需要故障隔离）再引入第二个。</li><li>给子任务的描述要像给第一天入职的新人写工单——详细到不依赖共享上下文就能独立执行。分工要 MECE（互不重叠、完全穷尽）。</li><li>一个主 Agent 编排过多执行者，协调开销会吃掉收益。从一个规划者 + 2-3 个执行者开始。信息每传递一次就衰减一次——让子 Agent 直接写文件，不通过主 Agent 转述。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Amazon 多 Agent 评估案例（Planning Score、Communication Score、Collaboration Success Rate）提供了多 Agent 架构的产品评估框架。</div>
+</div>
+<div class="pitfall">
+<h4>关键词八：加法偏见</h4>
+<p><strong>核心观点：</strong>加法能力是智慧，减法是智慧。AI 从人类语言中训练，把这个加法偏见进行了放大。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>每次想加东西之前，先问「能不能减」。减法不是删除，是策展——判断什么值得留下。</li><li>审计工具集和指令库。几个月没触发的规则标记废弃。上下文窗口的注意力成本是 n² 级别的。</li><li>识别哪些约束是物理限制，哪些只是过时惯例——这个判断 AI 目前做不好，是人的职责。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Agent 工具集应遵循「最小可行工具集」原则——Anthropic 和 Amazon 都强调 bloated tool sets 是 Agent 失败的主因。</div>
+</div>
+<div class="pitfall">
+<h4>关键词九：去技能化</h4>
+<p><strong>核心观点：</strong>AI 未必让你失业，但可能先让你失去「本来会做这件事」的能力——而你可能根本不会注意到。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>每隔一两周找一个小任务，完全不用 AI 做。手感在下降、犹豫在增加，那就是信号。</li><li>别全盘委托。高效模式是用 AI 支撑思考，不是替代思考。把判断力和设计决策留在自己手里。</li><li>保留不被打断的深度思考时间。重新练习深度阅读、独立写作、不借助工具的分析。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>产品经理必须保持对 Agent 能力边界的独立判断——不能因 Agent 能跑 Demo 就认为生产可用，需保留独立评估能力。</div>
+</div>
+<div class="pitfall">
+<h4>关键词十：知识工程</h4>
+<p><strong>核心观点：</strong>方法会过时，工具会迭代。最终留下来的是判断框架、因果链条、领域直觉。</p>
+<div class="card"><div class="card-title">行动建议</div><ul><li>每次 AI 出错时花 10 秒把纠正写进上下文文件，标注「这条和哪条相关」——在建连接。</li><li>先写 Skill（解决重复教），再记交互痕迹（解决反复忘），积累够了连接自然涌现。给 Skill 加依赖关系，给记忆加标签，给文件加版本号。</li><li>对抗知识腐烂。每次碰到过时说明，花 30 秒改掉。好的知识库不是大的，是活的。</li></ul></div>
+<div class="pm-view"><strong>与 Agent 开发的关联：</strong>Agent 项目的 Golden Dataset、Tool Schema 文档、评估 Rubric 就是「知识工程」的产出——是团队最不可替代的资产。</div>
+</div>
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>AI 协作的核心范式是「驾驭工程」——人设计环境，AI 在环境中执行</li>
+<li>记忆、上下文、技能都需要主动管理——精确遗忘比完美记忆更重要</li>
+<li>评估必须独立化——分离「做事」与「判断」的上下文</li>
+<li>多 Agent 是进阶选项，90% 场景单 Agent 足够</li>
+<li>知识工程是 AI 时代个人与团队最不可替代的积累</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="part6">
+<div class="part-header"><div class="part-header-text"><span class="part-num">PART 06</span><h2>第六部分：AI Agent 从零到一速成指南（进阶参考）</h2><div class="part-meta">系统学习路线 · 按需深入</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：<a href="https://github.com/didilili/ai-agents-from-zero" target="_blank">ai-agents-from-zero</a> · didilili · ⭐ 2,372</div>
+
+<h3>六个阶段学习路线图</h3>
+
+<h4>阶段 01：大模型基础能力构建</h4>
+<table class="data-table"><thead><tr><th>章节</th><th>核心知识点</th><th>实战项目</th><th>PM 重点 ⭐</th></tr></thead><tbody>
+<tr><td>LLM 认识与环境准备</td><td>LLM 起源、主流模型特点、预训练/微调/推理</td><td>环境搭建、API 调用</td><td>⭐ 模型能力边界与选型逻辑</td></tr>
+<tr><td>大模型架构原理</td><td>Transformer、MoE、自注意力、多模态</td><td>—</td><td>⭐ 理解 Token、上下文窗口概念</td></tr>
+<tr><td>大模型调度平台</td><td>Ollama、云端/本地部署</td><td>本地模型部署</td><td>⭐ 成本与部署方式 trade-off</td></tr>
+<tr><td>提示词工程</td><td>核心原则、CoT、Few-shot、多轮对话</td><td>Prompt 模板练习</td><td>⭐⭐ 必读：Prompt 结构与评估方法</td></tr>
+</tbody></table>
+
+<h4>阶段 02：企业低代码平台开发与项目实战</h4>
+<table class="data-table"><thead><tr><th>章节</th><th>核心知识点</th><th>实战项目</th><th>PM 重点 ⭐</th></tr></thead><tbody>
+<tr><td>Coze（扣子）平台</td><td>插件/知识库/工作流/智能体</td><td>项目1：商户运营管家</td><td>⭐⭐ 低代码 Agent 产品设计</td></tr>
+<tr><td>Dify AI 平台</td><td>工作流/Agent/知识库</td><td>投诉分类、调研报告、客服分析</td><td>⭐⭐ 工作流编排与知识库设计</td></tr>
+<tr><td>容器化与企业部署</td><td>Docker、腾讯云/阿里云、Ollama</td><td>Coze 本地部署</td><td>⭐ 部署成本与合规考量</td></tr>
+<tr><td>AI 编程工具</td><td>Trae AI、Qoder、MCP 接入</td><td>—</td><td>—</td></tr>
+</tbody></table>
+
+<h4>阶段 03：大模型核心开发框架</h4>
+<table class="data-table"><thead><tr><th>章节</th><th>核心知识点</th><th>实战项目</th><th>PM 重点 ⭐</th></tr></thead><tbody>
+<tr><td>LangChain</td><td>Model I/O、LCEL、Memory、Tools、Agent</td><td>Hello World 案例</td><td>⭐⭐ Agent 组件概念（Tool/Memory/Chain）</td></tr>
+<tr><td>LangGraph</td><td>State/Node/Edge、持久化、多智能体</td><td>图式工作流</td><td>⭐⭐ 工作流状态机设计思维</td></tr>
+<tr><td>MCP 从原理到实战</td><td>与 Function Calling 对比、Server 部署</td><td>自定义 MCP Server</td><td>⭐ 工具接入标准化</td></tr>
+<tr><td>A2A 协议</td><td>跨 Agent 通信</td><td>—</td><td>⭐ 多 Agent 协作协议</td></tr>
+</tbody></table>
+
+<h4>阶段 04：企业级 RAG / Agent 项目实战</h4>
+<table class="data-table"><thead><tr><th>章节</th><th>核心知识点</th><th>实战项目</th><th>PM 重点 ⭐</th></tr></thead><tbody>
+<tr><td>掌柜智库</td><td>LangGraph RAG、多路召回、RAGAS 评估</td><td>完整 RAG 系统</td><td>⭐⭐ RAG 评估指标与召回策略</td></tr>
+<tr><td>电商小二</td><td>意图解析、转人工、对话复盘</td><td>客服 Agent</td><td>⭐⭐⭐ 客服 Agent 产品设计必读</td></tr>
+<tr><td>电商问数</td><td>NL2SQL、LangGraph、Qdrant、ES</td><td><a href="https://github.com/didilili/shopkeeper-agent">shopkeeper-agent</a></td><td>⭐⭐ 自然语言问数产品设计</td></tr>
+<tr><td>深度研搜</td><td>DeepAgents 多智能体、WebSocket 进度</td><td><a href="https://github.com/didilili/deepsearch-agents">deepsearch-agents</a></td><td>⭐⭐ 多 Agent 研究系统设计</td></tr>
+<tr><td>市场罗盘</td><td>场景化任务拆解、阶段管控</td><td>从 0 到 1 项目</td><td>⭐⭐⭐ PM 项目管理方法论</td></tr>
+</tbody></table>
+
+<h4>阶段 05：大模型微调实践</h4>
+<table class="data-table"><thead><tr><th>章节</th><th>核心知识点</th><th>实战项目</th><th>PM 重点 ⭐</th></tr></thead><tbody>
+<tr><td>微调核心</td><td>PEFT/LoRA/QLoRA、DeepSpeed、vLLM</td><td>微调—评测—部署</td><td>⭐ 何时需要微调 vs Prompt/RAG</td></tr>
+<tr><td>数据集构建</td><td>标注与质量、数据增强</td><td>—</td><td>—</td></tr>
+<tr><td>Llama-Factory</td><td>单卡/多卡微调</td><td>业务场景迭代</td><td>—</td></tr>
+</tbody></table>
+
+<h4>阶段 06：大厂开发规范</h4>
+<table class="data-table"><thead><tr><th>章节</th><th>核心知识点</th><th>实战项目</th><th>PM 重点 ⭐</th></tr></thead><tbody>
+<tr><td>企业大模型研发流程</td><td>技术调研、方案设计、RAG pipeline、评估</td><td>立项与需求文档</td><td>⭐⭐⭐ Agent 项目立项流程</td></tr>
+<tr><td>大模型当下热点</td><td>Agent/RAG 主流技术跟踪</td><td>—</td><td>⭐⭐ 行业趋势跟踪</td></tr>
+</tbody></table>
+
+<p><strong>产品经理推荐学习路径：</strong>阶段 01（Prompt 工程）→ 阶段 02（Coze/Dify 低代码）→ 阶段 03（LangChain/LangGraph 概念）→ 阶段 04（电商小二 + 市场罗盘）→ 阶段 06（研发流程）。阶段 05 微调可跳过，了解「何时需要微调」即可。</p>
+
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>六阶段路线从 LLM 基础 → 低代码 → 框架 → 企业实战 → 微调 → 规范，覆盖完整 Agent 工程链路</li>
+<li>两个完整实战项目（电商问数、深度研搜）可直接跑通，是最好的 Portfolio 素材</li>
+<li>PM 应重点掌握：Prompt 工程、低代码平台、Agent 组件概念、客服/问数产品设计、项目立项流程</li>
+<li>面试题库与章节互链，适合转岗/应届集中复盘</li>
+<li>Python + LangChain/LangGraph 是当前 Agent 工程最主流的技术栈</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="appendix-a">
+<div class="part-header"><div class="part-header-text"><span class="part-num">APPX A</span><h2>附录 A：Anthropic 官方提示词工程指南（速查清单）</h2><div class="part-meta">Prompt Engineering 核心技巧与最佳实践</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<div class="part-source">来源：<a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank">Prompt engineering overview</a> · Anthropic Docs</div>
+
+<h3>开始之前的三要素</h3>
+<ol>
+<li>清晰定义用例的成功标准（Success Criteria）</li>
+<li>建立实证测试方法（Evaluations）</li>
+<li>准备第一版 Draft Prompt 用于迭代改进</li>
+</ol>
+
+<h3>何时做 Prompt Engineering vs 换模型</h3>
+<p>并非所有问题都适合 Prompt 解决。延迟和成本问题可能通过选择不同模型更容易改善。Prompt Engineering 聚焦<strong>可通过 Prompt 控制的成功标准</strong>。</p>
+
+<h3>核心技巧速查清单</h3>
+<div class="card-grid">
+<div class="card"><div class="card-title">1. 清晰直接（Be Clear and Direct）</div><ul>
+<li>明确说明期望的输出格式、长度、风格</li>
+<li>避免模糊指令如「写得好一点」——给出具体标准</li>
+<li>把 Claude 当作聪明但没有上下文的新员工</li>
+</ul></div>
+<div class="card"><div class="card-title">2. 使用 XML 标签结构化</div><ul>
+<li>用 <code>&lt;instructions&gt;</code>、<code>&lt;context&gt;</code>、<code>&lt;example&gt;</code> 等标签分隔 Prompt 各部分</li>
+<li>便于 Claude 区分指令、上下文、示例与输入数据</li>
+<li>标签名称无特殊含义，一致即可</li>
+</ul></div>
+<div class="card"><div class="card-title">3. 提供示例（Few-shot）</div><ul>
+<li>2-5 个 diverse、canonical 示例优于 20 个 edge case 规则</li>
+<li>示例应展示输入→输出的完整映射</li>
+<li>示例是 LLM 理解预期行为的最有效方式</li>
+</ul></div>
+<div class="card"><div class="card-title">4. 让 Claude 思考（Chain of Thought）</div><ul>
+<li>要求 Claude 在给出最终答案前先逐步推理</li>
+<li>可用 <code>&lt;thinking&gt;</code> 和 <code>&lt;answer&gt;</code> 标签分离推理与答案</li>
+<li>复杂任务显著改善准确性</li>
+</ul></div>
+<div class="card"><div class="card-title">5. 分配角色（Role Prompting）</div><ul>
+<li>在 System Prompt 中定义 Claude 的角色与专业领域</li>
+<li>角色设定影响语气、深度与视角</li>
+<li>避免过于宽泛——「你是专家」不如「你是有 10 年经验的 SQL 优化工程师」</li>
+</ul></div>
+<div class="card"><div class="card-title">6. Prompt 链（Prompt Chaining）</div><ul>
+<li>复杂任务拆分为多个 Prompt 步骤，前一步输出作为后一步输入</li>
+<li>每步聚焦单一子任务，降低单 Prompt 复杂度</li>
+<li>适合多阶段工作流（研究→大纲→写作→审校）</li>
+</ul></div>
+<div class="card"><div class="card-title">7. 预填充响应（Prefill Response）</div><ul>
+<li>在 Assistant 消息中预填开头（如 <code>{</code> 强制 JSON 输出）</li>
+<li>引导输出格式，减少格式错误</li>
+</ul></div>
+<div class="card"><div class="card-title">8. 迭代测试流程</div><ul>
+<li>从最小 Prompt + 最强模型开始测试</li>
+<li>基于失败模式逐步添加指令和示例</li>
+<li>每次只改一个变量，便于归因</li>
+<li>使用 Claude Console 的 Prompt Generator 和 Prompt Improver 工具</li>
+</ul></div>
+</div>
+
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>Prompt Engineering 的前提是清晰的成功标准 + 可运行的 Eval</li>
+<li>结构化（XML 标签）+ 示例（Few-shot）+ 推理（CoT）是三大支柱</li>
+<li>复杂任务用 Prompt Chaining 拆分，而非堆砌单 Prompt</li>
+<li>从最小 Prompt 开始，基于失败模式迭代——不要过度设计</li>
+</ul></div>
+</div></section>
+
+<section class="part" id="appendix-b">
+<div class="part-header"><div class="part-header-text"><span class="part-num">APPX B</span><h2>附录 B：术语表</h2><div class="part-meta">按字母排序 · 英文原文 + 中文释义 + 一句话解释</div></div><span class="part-toggle">▼</span></div>
+<div class="part-body">
+<table class="data-table"><thead><tr><th>英文</th><th>中文</th><th>解释</th></tr></thead><tbody>
+<tr><td><code>A2A</code></td><td>Agent-to-Agent</td><td>跨 Agent 通信协议，支持多 Agent 协作</td></tr>
+<tr><td><code>Agent</code></td><td>智能体</td><td>能自主规划、调用工具并完成目标的 AI 系统</td></tr>
+<tr><td><code>Agent Engineering</code></td><td>Agent 工程</td><td>将 LLM 迭代打磨为可靠 Agent 系统的工程过程</td></tr>
+<tr><td><code>Agentic AI</code></td><td>智能体 AI</td><td>能自主规划、调用工具、迭代解决问题的 AI 系统</td></tr>
+<tr><td><code>Attention Budget</code></td><td>注意力预算</td><td>LLM 处理上下文时可用的注意力资源，随 Token 增加而递减</td></tr>
+<tr><td><code>Compaction</code></td><td>压缩</td><td>总结接近上下文限制的历史对话，重启新上下文窗口</td></tr>
+<tr><td><code>Context Engineering</code></td><td>上下文工程</td><td>策划和维护 LLM 推理时最优 Token 集合的策略</td></tr>
+<tr><td><code>Context Rot</code></td><td>上下文腐化</td><td>上下文 Token 增多时模型准确回忆信息能力下降</td></tr>
+<tr><td><code>CoT</code></td><td>Chain-of-Thought（思维链）</td><td>要求 LLM 逐步推理后再给出答案的提示策略</td></tr>
+<tr><td><code>Evals</code></td><td>评估</td><td>系统性测试 Agent/LLM 输出质量的方法与实践</td></tr>
+<tr><td><code>Few-shot</code></td><td>少样本提示</td><td>在 Prompt 中提供少量示例引导模型行为</td></tr>
+<tr><td><code>Fine-tuning</code></td><td>微调</td><td>在特定数据上进一步训练基础模型以适应特定任务</td></tr>
+<tr><td><code>Golden Dataset</code></td><td>黄金数据集</td><td>带 Ground Truth 标注的标准测试集，用于回归测试</td></tr>
+<tr><td><code>Ground Truth</code></td><td>标准答案</td><td>用于评估模型输出正确性的参考标准</td></tr>
+<tr><td><code>Hallucination</code></td><td>幻觉</td><td>模型生成与事实不符或虚构的内容</td></tr>
+<tr><td><code>HITL</code></td><td>Human-in-the-Loop（人在回路）</td><td>人工参与 Agent 评估与决策审核的机制</td></tr>
+<tr><td><code>LLM</code></td><td>Large Language Model（大语言模型）</td><td>基于海量文本训练的语言理解与生成模型</td></tr>
+<tr><td><code>LLM-as-Judge</code></td><td>LLM 即裁判</td><td>使用 LLM 自动评估另一个 LLM/Agent 输出质量</td></tr>
+<tr><td><code>MCP</code></td><td>Model Context Protocol（模型上下文协议）</td><td>标准化 AI 与外部工具/数据交互的开放协议</td></tr>
+<tr><td><code>Non-deterministic</code></td><td>非确定性</td><td>相同输入可能产生不同输出的特性</td></tr>
+<tr><td><code>Observability</code></td><td>可观测性</td><td>追踪和监控系统运行状态、推理链与工具调用的能力</td></tr>
+<tr><td><code>Prompt Engineering</code></td><td>提示词工程</td><td>编写和组织 LLM 指令以获得最佳结果</td></tr>
+<tr><td><code>RAG</code></td><td>Retrieval-Augmented Generation（检索增强生成）</td><td>从外部知识库检索信息增强 LLM 回答</td></tr>
+<tr><td><code>Sub-agent</code></td><td>子智能体</td><td>在主 Agent 协调下处理特定子任务的专用 Agent</td></tr>
+<tr><td><code>Tool Use</code></td><td>工具使用</td><td>Agent 调用外部 API/函数获取信息或执行操作</td></tr>
+<tr><td><code>Trace</code></td><td>追踪记录</td><td>Agent 执行过程的完整日志，含每步输入输出与耗时</td></tr>
+
+</tbody></table>
+<div class="card card-highlight"><div class="card-title">核心收获</div><ul>
+<li>Agent 工程术语横跨编排、评估、上下文管理三大领域</li>
+<li>Context Engineering 和 Prompt Engineering 是当前 Agent 时代最核心的两个概念</li>
+<li>Observability + Evals + HITL 构成 Agent 质量保障三角</li>
+</ul></div>
+</div></section>
+
+</main>
+</div>
+
+<nav class="mobile-chapters" id="mobileChapters" aria-label="章节快捷导航">
+  <button class="chapter-pill active" data-target="part1">01 踩坑</button>
+  <button class="chapter-pill" data-target="part2">02 全景</button>
+  <button class="chapter-pill" data-target="part3">03 评估</button>
+  <button class="chapter-pill" data-target="part4">04 上下文</button>
+  <button class="chapter-pill" data-target="part5">05 方法论</button>
+  <button class="chapter-pill" data-target="part6">06 速成</button>
+  <button class="chapter-pill" data-target="appendix-a">A 提示词</button>
+  <button class="chapter-pill" data-target="appendix-b">B 术语</button>
+</nav>
+
+<div class="fab-group">
+  <button class="fab fab-top" id="backTop" aria-label="回到顶部">↑</button>
+</div>
+
+<div class="term-sheet" id="termSheet" role="dialog" aria-modal="true" aria-label="术语释义">
+  <div class="term-sheet-backdrop" id="termSheetBackdrop"></div>
+  <div class="term-sheet-panel">
+    <div class="term-sheet-handle"></div>
+    <div class="term-sheet-word" id="termSheetWord"></div>
+    <div class="term-sheet-def" id="termSheetDef"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const parts = document.querySelectorAll('.part');
+  const searchBox = document.getElementById('searchBox');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const navToggle = document.getElementById('navToggle');
+  const backTop = document.getElementById('backTop');
+  const navLinks = document.querySelectorAll('.nav-list a');
+  const readProgress = document.getElementById('readProgress');
+  const mobileChapter = document.getElementById('mobileChapter');
+  const chapterPills = document.querySelectorAll('.chapter-pill');
+  const termSheet = document.getElementById('termSheet');
+  const termSheetBackdrop = document.getElementById('termSheetBackdrop');
+  const termSheetWord = document.getElementById('termSheetWord');
+  const termSheetDef = document.getElementById('termSheetDef');
+  const isMobile = () => window.matchMedia('(max-width:768px)').matches;
+
+  const chapterNames = {
+    part1:'第一部分 · 生产踩坑', part2:'第二部分 · 行业全景', part3:'第三部分 · 评估体系',
+    part4:'第四部分 · 上下文工程', part5:'第五部分 · 工作方法论', part6:'第六部分 · 速成指南',
+    'appendix-a':'附录 A · 提示词', 'appendix-b':'附录 B · 术语表'
+  };
+
+  // Wrap tables for horizontal scroll on mobile
+  document.querySelectorAll('.data-table').forEach(table => {
+    if (!table.closest('.table-scroll')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'table-scroll';
+      table.parentNode.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    }
+  });
+
+  let scrollSpyLocked = false;
+  let scrollSpyTimer = null;
+  let pinnedChapterId = null;
+  let pinnedScrollY = 0;
+  const mobileChaptersEl = document.getElementById('mobileChapters');
+
+  function getReadLine() {
+    if (isMobile()) {
+      const header = document.getElementById('mobileHeader');
+      return (header ? header.offsetHeight : 56) + 20;
+    }
+    return 88;
+  }
+
+  function getCurrentSection() {
+    const line = getReadLine();
+    let fallback = parts[0] ? parts[0].id : 'part1';
+    for (const p of parts) {
+      const r = p.getBoundingClientRect();
+      if (r.top <= line && r.bottom > line) return p.id;
+      if (r.top <= line) fallback = p.id;
+    }
+    return fallback;
+  }
+
+  function scrollPillIntoView(id) {
+    if (!mobileChaptersEl) return;
+    const pill = mobileChaptersEl.querySelector('.chapter-pill[data-target="' + id + '"]');
+    if (!pill) return;
+    const targetLeft = pill.offsetLeft - mobileChaptersEl.clientWidth / 2 + pill.offsetWidth / 2;
+    mobileChaptersEl.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+  }
+
+  function setActiveChapter(id) {
+    navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    chapterPills.forEach(p => p.classList.toggle('active', p.dataset.target === id));
+    if (mobileChapter) mobileChapter.textContent = chapterNames[id] || '';
+    if (isMobile()) scrollPillIntoView(id);
+  }
+
+  function pinChapter(id) {
+    pinnedChapterId = id;
+    pinnedScrollY = window.scrollY;
+    setActiveChapter(id);
+  }
+
+  function scrollToPart(target) {
+    const headerOffset = isMobile()
+      ? (document.getElementById('mobileHeader')?.offsetHeight || 56) + 8
+      : 16;
+    const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({ top: Math.max(0, top), behavior: isMobile() ? 'auto' : 'smooth' });
+    requestAnimationFrame(() => {
+      pinnedScrollY = window.scrollY;
+      if (pinnedChapterId) setActiveChapter(pinnedChapterId);
+    });
+  }
+
+  // Part accordion
+  parts.forEach((part, i) => {
+    const header = part.querySelector('.part-header');
+    if (i > 0) part.classList.add('collapsed');
+    header.addEventListener('click', () => {
+      const wasCollapsed = part.classList.contains('collapsed');
+      parts.forEach(p => p.classList.add('collapsed'));
+      if (wasCollapsed) {
+        part.classList.remove('collapsed');
+        scrollSpyLocked = true;
+        clearTimeout(scrollSpyTimer);
+        pinChapter(part.id);
+        scrollToPart(part);
+        scrollSpyTimer = setTimeout(() => { scrollSpyLocked = false; }, 400);
+      }
+    });
+  });
+
+  function navigateTo(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    scrollSpyLocked = true;
+    clearTimeout(scrollSpyTimer);
+
+    parts.forEach(p => p.classList.add('collapsed'));
+    target.classList.remove('collapsed');
+    closeSidebar();
+    pinChapter(id);
+    scrollToPart(target);
+
+    scrollSpyTimer = setTimeout(() => { scrollSpyLocked = false; }, isMobile() ? 500 : 800);
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      navigateTo(link.getAttribute('href').slice(1));
+    });
+  });
+
+  chapterPills.forEach(pill => {
+    pill.addEventListener('click', () => navigateTo(pill.dataset.target));
+  });
+
+  navToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', closeSidebar);
+
+  // Reading progress + active chapter
+  function onScroll() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (readProgress) readProgress.style.width = docHeight > 0 ? (scrollTop / docHeight * 100) + '%' : '0%';
+    backTop.classList.toggle('visible', scrollTop > 400);
+
+    if (scrollSpyLocked) return;
+
+    if (pinnedChapterId && Math.abs(scrollTop - pinnedScrollY) < 80) {
+      setActiveChapter(pinnedChapterId);
+      return;
+    }
+    pinnedChapterId = null;
+
+    setActiveChapter(getCurrentSection());
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // Term tooltips: bottom sheet on mobile, hover on desktop
+  function openTermSheet(word, def) {
+    termSheetWord.textContent = word;
+    termSheetDef.textContent = def;
+    termSheet.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeTermSheet() {
+    termSheet.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  termSheetBackdrop.addEventListener('click', closeTermSheet);
+
+  document.querySelectorAll('.term').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const tip = el.querySelector('.term-tip');
+      if (!tip) return;
+      if (isMobile()) {
+        e.preventDefault();
+        openTermSheet(el.childNodes[0].textContent.trim(), tip.textContent.trim());
+      } else {
+        document.querySelectorAll('.term.active').forEach(t => { if (t !== el) t.classList.remove('active'); });
+        el.classList.toggle('active');
+      }
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.term.active').forEach(t => t.classList.remove('active'));
+  });
+
+  // Search
+  let searchTimer;
+  searchBox.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      const q = searchBox.value.trim().toLowerCase();
+      document.querySelectorAll('.search-hit').forEach(el => { el.outerHTML = el.textContent; });
+      parts.forEach(p => {
+        p.classList.remove('search-hidden');
+        if (!q) return;
+        if (!p.textContent.toLowerCase().includes(q)) p.classList.add('search-hidden');
+        else { p.classList.remove('collapsed'); highlightIn(p, q); }
+      });
+    }, 200);
+  });
+
+  function highlightIn(root, q) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const t = node.textContent;
+      const idx = t.toLowerCase().indexOf(q);
+      if (idx === -1 || !node.parentElement || node.parentElement.closest('script,style,.term-tip,.part-header,.sidebar')) return;
+      const span = document.createElement('span');
+      span.className = 'search-hit';
+      span.textContent = t.slice(idx, idx + q.length);
+      const parent = node.parentNode;
+      if (t.slice(0, idx)) parent.insertBefore(document.createTextNode(t.slice(0, idx)), node);
+      parent.insertBefore(span, node);
+      if (t.slice(idx + q.length)) parent.insertBefore(document.createTextNode(t.slice(idx + q.length)), node);
+      parent.removeChild(node);
+    });
+  }
+
+  // Swipe to close sidebar
+  let touchStartX = 0;
+  sidebar.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  sidebar.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientX - touchStartX < -60) closeSidebar();
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
